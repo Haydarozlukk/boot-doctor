@@ -1,0 +1,12 @@
+#!/usr/bin/env sh
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+BOOT_DOCTOR_JAR="$SCRIPT_DIR/../target/boot-doctor.jar"
+
+if [ ! -f "$BOOT_DOCTOR_JAR" ]; then
+    echo 'Boot Doctor JAR not found. Run "mvn package" first.' >&2
+    exit 1
+fi
+
+exec java -jar "$BOOT_DOCTOR_JAR" "$@"
+
