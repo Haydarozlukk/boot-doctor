@@ -1,0 +1,5 @@
+spring:
+  datasource:
+    password: ${DB_PASSWORD}
+service:
+  api-key: ${SERVICE_API_KEY:}

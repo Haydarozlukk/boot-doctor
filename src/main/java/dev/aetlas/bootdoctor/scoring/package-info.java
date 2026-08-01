@@ -1,5 +1,2 @@
-/**
- * Score calculation components will be introduced with the v0.1 rule implementation.
- */
+/** Production-readiness score calculation components. */
 package dev.aetlas.bootdoctor.scoring;
-

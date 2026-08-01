@@ -27,26 +27,29 @@ public final class ProjectScanner {
         }
 
         List<Path> files = new ArrayList<>();
-        Files.walkFileTree(rootPath, new SimpleFileVisitor<>() {
-            @Override
-            public FileVisitResult preVisitDirectory(Path directory, BasicFileAttributes attributes) {
-                if (!directory.equals(rootPath)
-                        && EXCLUDED_DIRECTORIES.contains(directory.getFileName().toString())) {
-                    return FileVisitResult.SKIP_SUBTREE;
-                }
-                return FileVisitResult.CONTINUE;
-            }
+        Files.walkFileTree(
+                rootPath,
+                new SimpleFileVisitor<>() {
+                    @Override
+                    public FileVisitResult preVisitDirectory(
+                            Path directory, BasicFileAttributes attributes) {
+                        if (!directory.equals(rootPath)
+                                && EXCLUDED_DIRECTORIES.contains(
+                                        directory.getFileName().toString())) {
+                            return FileVisitResult.SKIP_SUBTREE;
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
 
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
-                if (attributes.isRegularFile()) {
-                    files.add(rootPath.relativize(file));
-                }
-                return FileVisitResult.CONTINUE;
-            }
-        });
+                    @Override
+                    public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+                        if (attributes.isRegularFile()) {
+                            files.add(rootPath.relativize(file));
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
+                });
 
         return new ProjectContext(rootPath, files);
     }
 }
-

@@ -1,6 +1,6 @@
 target/
+.mvn-local/
 .idea/
 .vscode/
 *.iml
 *.log
-

@@ -5,12 +5,10 @@ import picocli.CommandLine;
 
 public final class BootDoctorApplication {
 
-    private BootDoctorApplication() {
-    }
+    private BootDoctorApplication() {}
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new BootDoctorCommand()).execute(args);
         System.exit(exitCode);
     }
 }
-

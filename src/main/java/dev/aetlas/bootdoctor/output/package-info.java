@@ -1,5 +1,2 @@
-/**
- * Report output components will be introduced with the v0.1 rule implementation.
- */
+/** Terminal report formatting and readiness status components. */
 package dev.aetlas.bootdoctor.output;
-

@@ -9,14 +9,16 @@ import java.util.function.Predicate;
 public record ProjectContext(Path rootPath, List<Path> files) {
 
     public ProjectContext {
-        rootPath = Objects.requireNonNull(rootPath, "rootPath must not be null")
-                .toAbsolutePath()
-                .normalize();
-        files = Objects.requireNonNull(files, "files must not be null").stream()
-                .map(ProjectContext::normalizeRelativePath)
-                .distinct()
-                .sorted(Comparator.comparing(ProjectContext::portablePath))
-                .toList();
+        rootPath =
+                Objects.requireNonNull(rootPath, "rootPath must not be null")
+                        .toAbsolutePath()
+                        .normalize();
+        files =
+                Objects.requireNonNull(files, "files must not be null").stream()
+                        .map(ProjectContext::normalizeRelativePath)
+                        .distinct()
+                        .sorted(Comparator.comparing(ProjectContext::portablePath))
+                        .toList();
     }
 
     public boolean hasFile(String relativePath) {
@@ -44,7 +46,8 @@ public record ProjectContext(Path rootPath, List<Path> files) {
     private static Path normalizeRelativePath(Path path) {
         Objects.requireNonNull(path, "file path must not be null");
         if (path.isAbsolute()) {
-            throw new IllegalArgumentException("File paths must be relative to the project root: " + path);
+            throw new IllegalArgumentException(
+                    "File paths must be relative to the project root: " + path);
         }
 
         Path normalized = path.normalize();
@@ -58,4 +61,3 @@ public record ProjectContext(Path rootPath, List<Path> files) {
         return path.toString().replace('\\', '/');
     }
 }
-

@@ -1,137 +1,203 @@
 # Boot Doctor
 
-Boot Doctor, Spring Boot Maven projelerini production-readiness açısından
-incelemek üzere geliştirilen Java tabanlı bir komut satırı aracıdır.
+[![CI](https://github.com/Haydarozlukk/boot-doctor/actions/workflows/ci.yml/badge.svg)](https://github.com/Haydarozlukk/boot-doctor/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/Haydarozlukk/boot-doctor/actions/workflows/codeql.yml/badge.svg)](https://github.com/Haydarozlukk/boot-doctor/actions/workflows/codeql.yml)
+[![Java 17](https://img.shields.io/badge/Java-17%2B-007396)](https://adoptium.net/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Amaç
+Boot Doctor, Spring Boot Maven projelerini temel production-readiness pratikleri
+açısından kontrol eden, bağımsız çalışan bir Java CLI aracıdır. Basit ve
+açıklanabilir kontroller kullanır; gereksiz yanlış pozitif üretmemeye odaklanır.
 
-Proje; güvenlik, operasyon, test, dokümantasyon ve temel mimari pratikleri
-basit ve güvenilir kontrollerle görünür hale getirmeyi amaçlar. İlk sürümlerde
-kusursuz static analysis yerine düşük yanlış pozitif oranına odaklanır.
+## Neler Kontrol Edilir?
 
-## Neden Var?
+| Rule | Severity | Ceza | Kontrol |
+|---|---:|---:|---|
+| `BUILD-001` | Critical | 100 | Spring Boot Maven projesi değil |
+| `SEC-001` | Critical | 20 | Config dosyasında olası açık secret |
+| `SEC-002` | High | 15 | CORS wildcard kullanımı |
+| `OPS-001` | Medium | 10 | Actuator dependency eksik |
+| `OPS-002` | Medium | 10 | Dockerfile eksik |
+| `OPS-003` | Low | 5 | Docker Compose eksik |
+| `TEST-001` | High | 15 | Test dosyası bulunamadı |
+| `DOC-001` | Low | 5 | README.md eksik |
+| `ARCH-001` | Medium | 10 | Global exception handler eksik |
+| `VAL-001` | Medium | 10 | Validation annotation eksik |
 
-Bir Spring Boot projesinin çalışması, production ortamına hazır olduğu anlamına
-gelmez. Eksik gözlemleme bağımlılıkları, açık secret değerleri, yetersiz testler
-ve eksik deployment dosyaları çoğu zaman ancak teslim aşamasında fark edilir.
-Boot Doctor bu temel eksikleri hızlı ve tekrarlanabilir bir CLI kontrolünde
-toplamayı hedefler.
+Bir rule aynı dosyada birden fazla finding üretse bile skor cezası yalnızca bir
+kez uygulanır. Spring Boot Maven projesi algılanamazsa diğer kontroller
+çalıştırılmaz ve skor `0` olur.
 
-## Mevcut Durum
+## Hızlı Kurulum
 
-Bu görev yalnızca çalışan CLI iskeletini ve gelecekteki kuralların kullanacağı
-temel veri yapılarını içerir. Henüz production-readiness rule implementasyonu
-bulunmaz.
+### GitHub Release Üzerinden
 
-## Gereksinimler
+1. [Releases](https://github.com/Haydarozlukk/boot-doctor/releases) sayfasından
+   işletim sistemine uygun paketi indir.
+2. Arşivi aç.
+3. Java 17 veya üzerinin kurulu olduğunu `java -version` ile doğrula.
 
-- Java 17 veya üzeri
-- Maven 3.6.3 veya üzeri
+Windows PowerShell:
 
-Proje Java 17 bytecode üretecek şekilde yapılandırılmıştır.
-
-## Derleme ve Test
-
-```bash
-mvn test
-mvn package
+```powershell
+.\bin\boot-doctor.cmd C:\path\to\spring-project
 ```
 
-Derleme sonunda bağımlılıkları içeren çalıştırılabilir dosya
-`target/boot-doctor.jar` altında oluşur.
+Linux veya macOS:
 
-## Çalıştırma
+```bash
+./bin/boot-doctor /path/to/spring-project
+```
+
+İstersen paketin `bin` dizinini `PATH` değişkenine ekleyerek her konumdan şu
+komutu kullanabilirsin:
+
+```bash
+boot-doctor .
+```
+
+### Kaynak Koddan
+
+Gereksinim: Java 17+. Maven, proje içindeki doğrulanmış Wrapper tarafından
+sağlanır.
+
+```bash
+git clone https://github.com/Haydarozlukk/boot-doctor.git
+cd boot-doctor
+.\mvnw.cmd clean verify
+java -jar target/boot-doctor.jar .
+```
+
+Linux veya macOS üzerinde build komutu `./mvnw clean verify` şeklindedir.
 
 Geliştirme sırasında:
 
 ```bash
-mvn exec:java -Dexec.args="."
+.\mvnw.cmd exec:java -Dexec.args="."
 ```
 
-Paketlenmiş JAR ile:
+## Kullanım
 
-```bash
-java -jar target/boot-doctor.jar .
+```text
+boot-doctor [--fail-on-findings] <path>
 ```
-
-### `boot-doctor` Komutu
-
-Windows PowerShell oturumunda:
-
-```powershell
-$env:Path = "$PWD\bin;$env:Path"
-boot-doctor .
-```
-
-Linux veya macOS üzerinde:
-
-```bash
-chmod +x bin/boot-doctor
-export PATH="$PWD/bin:$PATH"
-boot-doctor .
-```
-
-Launcher kullanılmadan Windows üzerinde doğrudan şu komut da çalıştırılabilir:
-
-```powershell
-.\bin\boot-doctor.cmd .
-```
-
-## Yardım
 
 ```bash
 boot-doctor --help
+boot-doctor --version
+boot-doctor .
+boot-doctor --fail-on-findings .
 ```
 
-## Örnek Terminal Çıktısı
+Varsayılan olarak geçerli bir dizin analiz edildiğinde finding bulunsa bile exit
+code `0` döner. CI/CD içinde `--fail-on-findings` kullanılırsa en az bir finding
+için exit code `1` döner. Eksik veya geçersiz path exit code `2` üretir.
+
+## Örnek Çıktı
 
 ```text
 Boot Doctor
 Target path: .
-Status: CLI initialized successfully
+Score: 75/100
+Status: NEEDS_ATTENTION
+Findings: 2
+
+[CRITICAL] SEC-001 - Possible plain secret for key 'spring.datasource.password' at line 8
+  Location: src/main/resources/application.yml
+[LOW] DOC-001 - README.md missing
+
+Summary: CRITICAL=1, HIGH=0, MEDIUM=0, LOW=1, INFO=0
 ```
 
-Eksik veya geçersiz path kullanıldığında CLI açıklayıcı bir hata mesajı basar
-ve `2` exit code ile sonlanır.
+Status eşikleri:
 
-## v0.1 Roadmap
+| Skor | Status |
+|---:|---|
+| 100 | `READY` |
+| 80-99 | `GOOD` |
+| 60-79 | `NEEDS_ATTENTION` |
+| 0-59 | `NOT_READY` |
+| Spring Boot Maven değil | `INVALID_PROJECT` |
 
-v0.1 sürümünde aşağıdaki kontrollerin eklenmesi planlanır:
+## Secret Kontrolü
+
+`SEC-001`; `application.yml`, `application.yaml`, `application.properties` ve
+profil varyantlarında password, token, secret ve API key benzeri alanları
+kontrol eder. Secret değerleri terminal çıktısına yazılmaz.
+
+Aşağıdaki değerler açık secret sayılmaz:
+
+```yaml
+password: ${DB_PASSWORD}
+client-secret: ${CLIENT_SECRET:}
+api-key: ENC(encrypted-value)
+token: vault://service/token
+```
+
+Güvensiz varsayılan içeren `${DB_PASSWORD:local-password}` ise finding üretir.
+
+## Sınırlar
+
+Boot Doctor kaynak kodu AST veya symbol resolver ile yorumlamaz. Kontroller dosya
+envanteri, güvenli XML ayrıştırma ve düşük riskli metin kalıpları kullanır. Bu
+nedenle rapor, güvenlik denetiminin veya code review sürecinin yerine geçmez.
+
+Bu sürüm yalnızca Java 17+ Spring Boot Maven projelerini destekler. Gradle,
+Kotlin, otomatik fix, web arayüzü ve uzak sunucuya kaynak kod gönderimi yoktur.
+Tüm analiz yerel makinede yapılır.
+
+## Geliştirme
+
+Windows:
+
+```powershell
+.\mvnw.cmd spotless:apply
+.\mvnw.cmd clean verify
+```
+
+Linux veya macOS:
+
+```bash
+./mvnw spotless:apply
+./mvnw clean verify
+```
+
+`verify`; Java/Maven sürüm kontrollerini, dependency convergence, 28 testi,
+Spotless format kontrolünü ve JaCoCo kapsam eşiklerini çalıştırır. Minimum kapsam
+eşikleri satır için `%90`, branch için `%70` değerindedir.
+
+`mvn package` şu dosyaları üretir:
 
 ```text
-BUILD-001 Not a Spring Boot Maven Project
-SEC-001 Possible plain secret in config file
-SEC-002 CORS wildcard detected
-OPS-001 Actuator dependency missing
-OPS-002 Dockerfile missing
-OPS-003 Docker Compose missing
-TEST-001 No test files found
-DOC-001 README.md missing
-ARCH-001 Global exception handler missing
-VAL-001 Validation annotation missing
+target/boot-doctor.jar
+target/boot-doctor-1.0.0-bin.zip
+target/boot-doctor-1.0.0-bin.tar.gz
+target/boot-doctor-1.0.0-sbom.json
 ```
 
-Ayrıca score değerinin 100 üzerinden hesaplanması, finding'lerin severity
-sırasıyla gösterilmesi, terminal raporu ve temiz/sorunlu iki fixture proje
-ile doğrulama v0.1 kapsamındadır.
+Fixture projeler `src/test/resources/fixtures` altındadır. Release workflow,
+`v1.0.0` gibi proje sürümüyle eşleşen tag push edildiğinde doğrulanmış paketleri
+GitHub Release olarak yayınlar.
 
-## v0.1 Dışında Bırakılanlar
+## Yayın Doğrulama
 
-- JavaParser ve symbol resolver
-- Entity'nin controller response olarak kullanılması analizi
-- Controller içindeki business logic analizi
-- Gradle ve Kotlin desteği
-- GitHub Action ve PR comment bot
-- Markdown rapor çıktısı
-- Otomatik düzeltme
-- Web arayüzü
+Her GitHub Release; SHA-256 checksum dosyası, CycloneDX JSON SBOM ve GitHub build
+provenance attestation içerir. İndirilen dosyanın checksum değerini doğrulamak
+için:
 
-## Gelecek Sürüm Fikirleri
+```powershell
+Get-FileHash .\boot-doctor.jar -Algorithm SHA256
+```
 
-- Gradle ve Kotlin proje desteği
-- JSON ve Markdown rapor formatları
-- CI/CD entegrasyonları
-- Yapılandırılabilir rule ve severity politikaları
-- Baseline karşılaştırması ve geçmiş rapor takibi
-- Güvenli otomatik düzeltme önerileri
+GitHub CLI kuruluysa provenance doğrulaması da yapılabilir:
 
+```bash
+gh attestation verify boot-doctor.jar -R Haydarozlukk/boot-doctor
+```
+
+Katkı kuralları için [CONTRIBUTING.md](CONTRIBUTING.md), güvenlik bildirimi için
+[SECURITY.md](SECURITY.md) kullanılmalıdır.
+
+## Lisans
+
+[MIT](LICENSE)

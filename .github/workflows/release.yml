@@ -1,0 +1,61 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+  id-token: write
+  attestations: write
+  artifact-metadata: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Set up Java 17
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: Verify tag version
+        id: version
+        shell: bash
+        run: |
+          project_version=$(./mvnw help:evaluate -Dexpression=project.version -q -DforceStdout)
+          test "v${project_version}" = "${GITHUB_REF_NAME}"
+          echo "project_version=${project_version}" >> "${GITHUB_OUTPUT}"
+      - name: Build and verify distributions
+        run: ./mvnw --batch-mode --no-transfer-progress clean verify
+      - name: Generate checksums
+        shell: bash
+        env:
+          PROJECT_VERSION: ${{ steps.version.outputs.project_version }}
+        run: |
+          cd target
+          sha256sum \
+            boot-doctor.jar \
+            "boot-doctor-${PROJECT_VERSION}-bin.zip" \
+            "boot-doctor-${PROJECT_VERSION}-bin.tar.gz" \
+            "boot-doctor-${PROJECT_VERSION}-sbom.json" \
+            > SHA256SUMS.txt
+      - name: Attest release artifacts
+        uses: actions/attest@508db95dd578ae2727ebd6217d5ba78e4fbda05d # v4
+        with:
+          subject-checksums: target/SHA256SUMS.txt
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@3d0d9888cb7fd7b750713d6e236d1fcb99157228 # v3
+        with:
+          generate_release_notes: true
+          files: |
+            target/boot-doctor.jar
+            target/boot-doctor-${{ steps.version.outputs.project_version }}-bin.zip
+            target/boot-doctor-${{ steps.version.outputs.project_version }}-bin.tar.gz
+            target/boot-doctor-${{ steps.version.outputs.project_version }}-sbom.json
+            target/SHA256SUMS.txt

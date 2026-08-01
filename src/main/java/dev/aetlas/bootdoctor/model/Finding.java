@@ -4,18 +4,15 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.Optional;
 
-public record Finding(
-        String ruleId,
-        Severity severity,
-        String message,
-        Optional<Path> location) {
+public record Finding(String ruleId, Severity severity, String message, Optional<Path> location) {
 
     public Finding {
         ruleId = requireNonBlank(ruleId, "ruleId");
         severity = Objects.requireNonNull(severity, "severity must not be null");
         message = requireNonBlank(message, "message");
-        location = Objects.requireNonNull(location, "location must not be null")
-                .map(Finding::normalizeRelativeLocation);
+        location =
+                Objects.requireNonNull(location, "location must not be null")
+                        .map(Finding::normalizeRelativeLocation);
     }
 
     public static Finding of(String ruleId, Severity severity, String message) {
@@ -48,4 +45,3 @@ public record Finding(
         return normalized;
     }
 }
-

@@ -8,14 +8,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ProjectScannerTest {
 
-    @TempDir
-    Path tempDirectory;
+    @TempDir Path tempDirectory;
 
     private final ProjectScanner scanner = new ProjectScanner();
 
@@ -29,9 +27,8 @@ class ProjectScannerTest {
         ProjectContext context = scanner.scan(tempDirectory);
 
         assertThat(context.rootPath()).isEqualTo(tempDirectory.toAbsolutePath().normalize());
-        assertThat(context.files()).containsExactly(
-                Path.of("README.md"),
-                Path.of("src/main/java/App.java"));
+        assertThat(context.files())
+                .containsExactly(Path.of("README.md"), Path.of("src/main/java/App.java"));
         assertThat(context.hasFile("README.md")).isTrue();
         assertThat(context.resolve(Path.of("README.md")))
                 .isEqualTo(tempDirectory.resolve("README.md").toAbsolutePath().normalize());
@@ -73,4 +70,3 @@ class ProjectScannerTest {
                 .isInstanceOf(UnsupportedOperationException.class);
     }
 }
-
