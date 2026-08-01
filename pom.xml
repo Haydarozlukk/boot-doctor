@@ -40,7 +40,7 @@
         <junit.version>5.14.4</junit.version>
         <assertj.version>3.27.7</assertj.version>
         <maven-enforcer.version>3.6.3</maven-enforcer.version>
-        <spotless.version>3.6.0</spotless.version>
+        <spotless.version>3.9.0</spotless.version>
         <!-- Newer google-java-format releases require Java 21 at formatter runtime. -->
         <google-java-format.version>1.24.0</google-java-format.version>
         <jacoco.version>0.8.15</jacoco.version>
@@ -107,7 +107,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.5.5</version>
+                <version>3.5.6</version>
             </plugin>
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
